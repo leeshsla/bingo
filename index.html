@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-3월 빙고 이벤트 현황판</title>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f4f1ea;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #4a3b32;
+            margin-bottom: 10px;
+        }
+
+        /* 검색창 스타일 */
+        .search-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            padding: 12px 20px;
+            width: 300px;
+            font-size: 16px;
+            border: 2px solid #8c7b70;
+            border-radius: 25px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #d9534f;
+            box-shadow: 0 0 8px rgba(217, 83, 79, 0.3);
+        }
+
+        /* 빙고판 그리드 (3x3) */
+        .bingo-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        /* 개별 빙고 셀 */
+        .bingo-cell {
+            background-color: white;
+            border: 3px solid #4a3b32;
+            border-radius: 10px;
+            aspect-ratio: 1 / 1; /* 정사각형 유지 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            padding: 10px;
+            text-align: center;
+        }
+
+        .bingo-cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 5px 10px 15px rgba(0,0,0,0.15);
+        }
+
+        /* 게임 제목 */
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: keep-all;
+        }
+
+        /* 검색 성공 시 하이라이트 스타일 */
+        .bingo-cell.matched {
+            background-color: #ffcccc; /* 성공 시 배경색 */
+            border-color: #d9534f;
+        }
+        
+        .bingo-cell.matched .game-title {
+            color: #d9534f;
+        }
+
+        .bingo-cell.matched::after {
+            content: "성공!";
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d9534f;
+            margin-top: 5px;
+        }
+
+        /* 툴팁 (마우스 오버 시 성공자 명단) */
+        .tooltip {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 100;
+            top: 105%; /* 셀 바로 아래 */
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip h4 {
+            margin: 0 0 5px 0;
+            border-bottom: 1px solid #555;
+            padding-bottom: 3px;
+            color: #ffbd59;
+        }
+
+        .bingo-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 600px) {
+            .bingo-board {
+                gap: 10px;
+            }
+            .game-title {
+                font-size: 1rem;
+            }
+            .bingo-cell::after {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🏆 2~3월 빙고 이벤트 현황판</h1>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="이름을 입력하세요 (예: 홍길동)">
+    </div>
+
+    <div class="bingo-board" id="bingoBoard">
+        <div class="loading">데이터를 불러오는 중...</div>
+    </div>
+
+    <script>
+        // 1. 구글 스프레드시트 ID (사용자가 제공한 링크에서 추출)
+        const SHEET_ID = '15X8Ypy6V0K1OzM4zFYkX_p62xWHG20qJG_YRUWB17Mk';
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+
+        // 2. 빙고판 순서 정의 (이미지 순서대로 고정)
+        const GAME_ORDER = [
+            "챌린저스", "스컬킹", "라스베가스",
+            "위너스써클", "소울메이트", "미지의행성",
+            "젝스님트", "히트", "텔레스트레이션"
+        ];
+        
+        // 이미지의 게임 이름과 시트의 헤더 이름이 약간 다를 경우를 대비한 매핑 (필요시 수정)
+        // 시트의 1행에 있는 이름과 정확히 일치해야 데이터가 연결됩니다.
+        // 현재는 GAME_ORDER의 이름이 시트 헤더와 같다고 가정합니다.
+
+        let bingoData = {}; // 데이터를 저장할 객체
+
+        // 3. 데이터 가져오기 및 렌더링
+        async function loadBingoData() {
+            try {
+                const response = await fetch(CSV_URL);
+                const text = await response.text();
+                const rows = text.split('\n').map(row => row.split(','));
+
+                // 헤더(게임 이름) 추출
+                const headers = rows[0].map(h => h.trim());
+                
+                // 데이터 파싱
+                // 구조: { "챌린저스": ["김철수", "이영희"], "스컬킹": [...] }
+                headers.forEach((game, index) => {
+                    // 시트의 열(Column)을 순회하며 이름 수집
+                    const winners = [];
+                    for(let i = 1; i < rows.length; i++) {
+                        const name = rows[i][index] ? rows[i][index].trim() : "";
+                        if(name) winners.push(name);
+                    }
+                    bingoData[game] = winners;
+                });
+
+                renderBoard();
+
+            } catch (error) {
+                console.error("Error loading sheet:", error);
+                document.getElementById('bingoBoard').innerHTML = "데이터를 불러오는데 실패했습니다. 시트가 '웹에 게시' 되었는지 확인해주세요.";
+            }
+        }
+
+        // 4. 빙고판 그리기
+        function renderBoard() {
+            const board = document.getElementById('bingoBoard');
+            board.innerHTML = ''; // 초기화
+
+            GAME_ORDER.forEach(gameName => {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                cell.dataset.game = gameName; // 게임 이름 저장
+
+                // 게임 타이틀
+                const title = document.createElement('div');
+                title.className = 'game-title';
+                title.innerText = gameName;
+                cell.appendChild(title);
+
+                // 툴팁 (성공자 명단)
+                const winners = bingoData[gameName] || []; // 해당 게임 성공자 리스트
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                
+                let winnerText = winners.length > 0 ? winners.join('<br>') : "아직 성공자가 없습니다.";
+                tooltip.innerHTML = `<h4>성공자 (${winners.length}명)</h4>${winnerText}`;
+                
+                cell.appendChild(tooltip);
+                board.appendChild(cell);
+            });
+        }
+
+        // 5. 검색 기능 구현
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('input', function() {
+            const searchName = this.value.trim();
+            const cells = document.querySelectorAll('.bingo-cell');
+
+            cells.forEach(cell => {
+                const gameName = cell.dataset.game;
+                const winners = bingoData[gameName] || [];
+
+                // 검색어가 있고, 리스트에 이름이 포함되어 있으면 하이라이트
+                if (searchName && winners.some(w => w.includes(searchName))) {
+                    cell.classList.add('matched');
+                } else {
+                    cell.classList.remove('matched');
+                }
+            });
+        });
+
+        // 시작
+        loadBingoData();
+    </script>
+</body>
+</html>
