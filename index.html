@@ -11,7 +11,7 @@
             --primary-color: #5d4037;
             --accent-color: #d84315;
             
-            /* [수정] 하이라이트 색상: 아주 연한 노란색 (투명도 0.3) */
+            /* 하이라이트 색상 (연한 노란색) */
             --highlight-yellow: rgba(255, 235, 59, 0.3); 
         }
 
@@ -77,6 +77,7 @@
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            margin-bottom: 40px; /* 통계 섹션과의 간격 */
         }
 
         /* 4. 개별 빙고 칸 */
@@ -84,12 +85,10 @@
             background-color: transparent;
             border: none;
             
-            /* [수정] 하이라이트 영역 크기 및 위치 조정 */
-            /* 위쪽 여백(margin-top)을 15%로 늘려 박스를 아래로 내림 */
-            /* 좌우 여백(margin-left/right)을 10%로 늘려 박스 너비를 줄임 */
+            /* 하이라이트 영역 크기 및 위치 조정 */
             margin: 15% 10% 5% 10%;
             
-            border-radius: 15px; /* 모서리 둥글게 */
+            border-radius: 15px;
 
             display: flex;
             flex-direction: column;
@@ -104,14 +103,12 @@
 
         /* 마우스 올렸을 때 */
         .bingo-cell:hover {
-            background-color: rgba(255, 255, 255, 0.4); /* 흰색 반투명 */
+            background-color: rgba(255, 255, 255, 0.4); 
             transform: scale(0.98);
             z-index: 100;
         }
 
-        .game-title {
-            display: none; /* 텍스트 숨김 (이미지에 포함됨) */
-        }
+        .game-title { display: none; }
 
         /* 인원수 배지 기본 스타일 */
         .count-badge {
@@ -126,27 +123,21 @@
             transition: all 0.3s;
         }
 
-        /* [수정됨] 5. 검색 성공 시 스타일 (테두리 제거, 연한 노란색) */
+        /* 검색 성공 시 스타일 */
         .bingo-cell.matched {
-            /* 아주 연한 노란색 배경 (형광펜 효과) */
             background-color: var(--highlight-yellow); 
-            
-            /* 테두리 제거 */
             border: none;
-            
-            /* 은은한 광채 */
             box-shadow: 0 0 20px rgba(255, 235, 59, 0.4);
         }
         
-        /* 성공 시 배지 스타일 */
         .bingo-cell.matched .count-badge {
-            background-color: #fff9c4; /* 연한 노란색 배경 */
+            background-color: #fff9c4;
             color: #3e2723;
-            border: 1px solid #fbc02d; /* 배지에만 얇은 테두리 */
+            border: 1px solid #fbc02d;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* 6. 툴팁 (팝업) */
+        /* 5. 툴팁 (팝업) */
         .tooltip {
             visibility: hidden;
             opacity: 0;
@@ -195,9 +186,61 @@
         .tooltip::-webkit-scrollbar { width: 5px; }
         .tooltip::-webkit-scrollbar-thumb { background-color: #777; border-radius: 3px; }
 
+        /* 6. 빙고 달성 현황 섹션 */
+        .stats-container {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 1px solid #eee;
+        }
+
+        .stat-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        /* 등급별 색상 포인트 */
+        .stat-card.rank-1 .stat-title { border-color: #a5d6a7; color: #2e7d32; }
+        .stat-card.rank-3 .stat-title { border-color: #90caf9; color: #1565c0; }
+        .stat-card.rank-all .stat-title { border-color: #ffcc80; color: #ef6c00; }
+
+        .stat-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px; /* 명단이 길어지면 스크롤 */
+            overflow-y: auto;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .stat-list li {
+            padding: 3px 0;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        
+        .stat-list::-webkit-scrollbar { width: 4px; }
+        .stat-list::-webkit-scrollbar-thumb { background-color: #ddd; border-radius: 2px; }
+
         @media (max-width: 600px) {
             .tooltip { width: 150px; }
-            .bingo-cell { margin: 10% 5%; } /* 모바일에서도 간격 조정 */
+            .bingo-cell { margin: 10% 5%; }
+            .stats-container { grid-template-columns: 1fr; } /* 모바일은 세로로 배치 */
         }
     </style>
 </head>
@@ -217,12 +260,17 @@
         </div>
     </div>
 
+    <!-- 빙고 달성자 통계 영역 -->
+    <div class="stats-container" id="statsContainer">
+        <!-- 자바스크립트로 채워짐 -->
+    </div>
+
     <script>
         // 구글 스프레드시트 ID
         const SHEET_ID = '15X8Ypy6V0K1OzM4zFYkX_p62xWHG20qJG_YRUWB17Mk';
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
-        // [중요] 구글 시트 1행의 제목과 정확히 일치해야 함
+        // 게임 순서 (0~8번 인덱스)
         const TARGET_GAMES = [
             "챌린저스", "스컬킹", "라스베가스",
             "위너스써클", "소울메이트", "미지의행성",
@@ -270,6 +318,7 @@
             }
 
             renderBoard();
+            calculateAndRenderStats(); // 통계 계산 실행
         }
 
         function renderBoard() {
@@ -301,6 +350,94 @@
                 `;
                 board.appendChild(cell);
             });
+        }
+
+        // [핵심 수정] 상위 등급 달성 시 하위 명단에서 제외하는 로직
+        function calculateAndRenderStats() {
+            // 1. 사용자별 성공한 게임 인덱스 수집
+            const userClearedGames = {};
+
+            TARGET_GAMES.forEach((game, index) => {
+                const winners = gameData[game] || [];
+                winners.forEach(name => {
+                    if (!userClearedGames[name]) {
+                        userClearedGames[name] = new Set();
+                    }
+                    userClearedGames[name].add(index);
+                });
+            });
+
+            // 2. 빙고 라인 정의 (0~8 인덱스 기준)
+            const bingoLines = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // 가로
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // 세로
+                [0, 4, 8], [2, 4, 6]             // 대각선
+            ];
+
+            // 3. 결과 분류 (상호 배타적)
+            const result = {
+                oneBingo: [],   // 1줄 이상 ~ 3줄 미만
+                threeBingo: [], // 3줄 이상 ~ 올빙고 미만
+                allBingo: []    // 올빙고 (9칸)
+            };
+
+            Object.entries(userClearedGames).forEach(([name, clearedSet]) => {
+                let lineCount = 0;
+
+                // 완성된 라인 개수 세기
+                bingoLines.forEach(line => {
+                    if (line.every(idx => clearedSet.has(idx))) {
+                        lineCount++;
+                    }
+                });
+
+                const isAllBingo = (clearedSet.size === 9);
+
+                // [중복 제외 로직 적용]
+                if (isAllBingo) {
+                    result.allBingo.push(name);       // 1순위: 올빙고
+                } else if (lineCount >= 3) {
+                    result.threeBingo.push(name);     // 2순위: 3빙고 (올빙고 제외)
+                } else if (lineCount >= 1) {
+                    result.oneBingo.push(name);       // 3순위: 1빙고 (3빙고 이상 제외)
+                }
+            });
+
+            // 이름순 정렬
+            result.oneBingo.sort();
+            result.threeBingo.sort();
+            result.allBingo.sort();
+
+            // 4. 화면에 그리기
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = `
+                <div class="stat-card rank-1">
+                    <div class="stat-title">🌱 1줄 빙고 (${result.oneBingo.length}명)</div>
+                    <ul class="stat-list">
+                        ${result.oneBingo.length > 0 
+                            ? result.oneBingo.map(n => `<li>${n}</li>`).join('') 
+                            : '<li style="color:#aaa">대상자 없음</li>'}
+                    </ul>
+                </div>
+                
+                <div class="stat-card rank-3">
+                    <div class="stat-title">🌿 3줄 빙고 (${result.threeBingo.length}명)</div>
+                    <ul class="stat-list">
+                        ${result.threeBingo.length > 0 
+                            ? result.threeBingo.map(n => `<li>${n}</li>`).join('') 
+                            : '<li style="color:#aaa">대상자 없음</li>'}
+                    </ul>
+                </div>
+
+                <div class="stat-card rank-all">
+                    <div class="stat-title">👑 올빙고 (${result.allBingo.length}명)</div>
+                    <ul class="stat-list">
+                        ${result.allBingo.length > 0 
+                            ? result.allBingo.map(n => `<li>${n}</li>`).join('') 
+                            : '<li style="color:#aaa">대상자 없음</li>'}
+                    </ul>
+                </div>
+            `;
         }
 
         const searchInput = document.getElementById('searchInput');
