@@ -96,31 +96,15 @@
 
         .game-title { display: none; }
 
-        .count-badge {
-            font-size: 0.85rem;
-            font-weight: bold;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 4px 10px;
-            border-radius: 20px;
-            color: #5d4037;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-            transition: all 0.3s;
-        }
+        /* [삭제됨] .count-badge 스타일 제거 */
 
+        /* 검색 성공 시 하이라이트 스타일 */
         .bingo-cell.matched {
             background-color: var(--highlight-yellow); 
             border: none;
             box-shadow: 0 0 20px rgba(255, 235, 59, 0.4);
         }
         
-        .bingo-cell.matched .count-badge {
-            background-color: #fff9c4;
-            color: #3e2723;
-            border: 1px solid #fbc02d;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
         /* 5. 툴팁 */
         .tooltip {
             visibility: hidden;
@@ -229,7 +213,7 @@
             transition: background-color 0.2s;
         }
 
-        /* [추가] 명단에서 검색된 이름 하이라이트 */
+        /* 명단에서 검색된 이름 하이라이트 */
         .stat-list li.highlight {
             background-color: #fff9c4;
             color: #d84315;
@@ -273,7 +257,7 @@
 
     <script>
         const SHEET_ID = '15X8Ypy6V0K1OzM4zFYkX_p62xWHG20qJG_YRUWB17Mk';
-        // [보완 1] 캐시 방지를 위해 현재 시간을 파라미터로 추가
+        // 캐시 방지를 위해 현재 시간을 파라미터로 추가
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
 
         const TARGET_GAMES = [
@@ -321,7 +305,7 @@
                         const name = row[colIndex].trim();
                         if (name) {
                             gameData[gameName].push(name);
-                            allParticipants.add(name); // [보완 3] 전체 참여자 집계
+                            allParticipants.add(name); // 전체 참여자 집계
                         }
                     }
                 });
@@ -345,12 +329,9 @@
                 cell.className = 'bingo-cell';
                 cell.dataset.game = gameName;
 
+                // [수정됨] 인원수 표시(badge) 제거, 툴팁만 남김
                 cell.innerHTML = `
                     <div class="game-title">${gameName}</div>
-                    
-                    <div class="count-badge">
-                        ${winners.length > 0 ? `✅ ${winners.length}명` : '0명'}
-                    </div>
                     
                     <div class="tooltip">
                         <h4>${gameName} 성공자</h4>
@@ -453,7 +434,7 @@
                 }
             });
 
-            // [보완 2] 명예의 전당 명단 하이라이트
+            // 2. 명예의 전당 명단 하이라이트
             const listItems = document.querySelectorAll('.stat-list li');
             listItems.forEach(li => {
                 const name = li.innerText;
