@@ -7,11 +7,10 @@
     <style>
         /* 1. 기본 스타일 설정 */
         :root {
-            --bg-color: #f8f5f2;
+            --bg-color: #f4f1ea;
             --primary-color: #5d4037;
             --accent-color: #d84315;
-            --highlight-bg: #ffccbc;
-            --card-bg: #ffffff;
+            --card-bg: transparent; /* 배경 투명하게 변경 */
         }
 
         body {
@@ -49,7 +48,7 @@
             outline: none;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
-            box-sizing: border-box; /* 패딩 포함 너비 계산 */
+            box-sizing: border-box; 
         }
 
         input[type="text"]:focus {
@@ -57,113 +56,111 @@
             box-shadow: 0 4px 12px rgba(216, 67, 21, 0.2);
         }
 
-        /* 3. 빙고판 그리드 레이아웃 */
+        /* 3. 빙고판 그리드 레이아웃 (이미지 배경 적용) */
         .bingo-board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3열 고정 */
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr); /* 3열 */
             width: 100%;
             max-width: 800px;
-            padding-bottom: 50px; /* 하단 툴팁 여유 공간 */
+            aspect-ratio: 1 / 1.1; /* 이미지 비율에 맞춰 조정 (필요시 수정) */
+            
+            /* ▼ 배경 이미지 설정 ▼ */
+            background-image: url('./board.png'); /* 이미지 파일명 */
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            
+            /* 이미지 테두리가 있으므로 gap은 없앱니다 */
+            gap: 0; 
+            
+            /* 외곽선 (이미지와 어울리게) */
+            border: 5px solid #4a3b32;
+            border-radius: 15px;
+            overflow: hidden; /* 둥근 모서리 적용 */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
 
-        /* 4. 개별 빙고 칸 (카드) */
+        /* 4. 개별 빙고 칸 (투명 히트박스 역할) */
         .bingo-cell {
-            background-color: var(--card-bg);
-            border: 2px solid var(--primary-color);
-            border-radius: 12px;
-            aspect-ratio: 1 / 1; /* 정사각형 유지 */
+            background-color: transparent; /* 이미지 보이게 투명 */
+            border: none; /* 테두리 제거 (이미지에 있음) */
+            
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end; /* 배지를 아래로 */
+            padding-bottom: 15px;
+            
             position: relative;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
-            box-shadow: 0 4px 0 rgba(93, 64, 55, 0.2);
-            text-align: center;
-            padding: 10px;
-            user-select: none;
+            transition: background-color 0.3s;
         }
 
-        /* [핵심] 마우스 올렸을 때 칸 자체가 앞으로 튀어나오게 설정 */
+        /* 마우스 올렸을 때: 반투명 흰색으로 하이라이트 */
         .bingo-cell:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-            z-index: 100; /* 주변 칸보다 훨씬 위에 배치 */
-            background-color: #fff8e1;
+            background-color: rgba(255, 255, 255, 0.4);
+            z-index: 100; 
         }
 
+        /* 이미지에 텍스트가 있으므로 HTML 텍스트는 숨김 */
         .game-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            word-break: keep-all;
-            line-height: 1.4;
+            display: none; 
         }
 
+        /* 성공 인원 배지 스타일 */
         .count-badge {
-            margin-top: 8px;
-            font-size: 0.85rem;
-            background-color: #eee;
-            padding: 4px 8px;
-            border-radius: 12px;
-            color: #666;
+            font-size: 0.9rem;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: #5d4037;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
         }
 
         /* 5. 검색 성공 시 스타일 */
         .bingo-cell.matched {
-            background-color: var(--highlight-bg);
-            border-color: var(--accent-color);
+            /* 붉은색 반투명 오버레이 */
+            background-color: rgba(255, 87, 34, 0.3); 
+            box-shadow: inset 0 0 0 3px var(--accent-color);
         }
         
-        .bingo-cell.matched .game-title {
-            color: #bf360c;
+        .bingo-cell.matched .count-badge {
+            background-color: var(--accent-color);
+            color: white;
         }
 
-        .bingo-cell.matched::after {
-            content: "✅ 성공!";
-            display: block;
-            margin-top: 5px;
-            font-weight: bold;
-            color: var(--accent-color);
-            font-size: 0.9rem;
-        }
-
-        /* 6. 툴팁 (명단 보여주는 팝업) */
+        /* 6. 툴팁 (명단 팝업) */
         .tooltip {
             visibility: hidden;
             opacity: 0;
             position: absolute;
             
-            /* 위치 설정: 카드 정중앙 */
+            /* 위치: 정중앙 */
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             
             width: 220px;
-            max-height: 250px; /* 최대 높이 제한 */
+            max-height: 200px;
             
             background-color: rgba(30, 30, 30, 0.95);
             color: white;
             padding: 15px;
             border-radius: 12px;
             text-align: center;
-            
-            /* 스크롤 설정 */
             overflow-y: auto;
             
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; /* 마우스가 툴팁 내용을 가리지 않게 */
+            transition: all 0.2s;
+            pointer-events: none;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        /* 마우스 올렸을 때 툴팁 표시 */
         .bingo-cell:hover .tooltip {
             visibility: visible;
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
-            pointer-events: auto; /* 스크롤 가능하게 변경 */
+            pointer-events: auto;
         }
 
         .tooltip h4 {
@@ -183,27 +180,14 @@
             font-size: 0.95rem;
             line-height: 1.6;
         }
-        
-        /* 스크롤바 디자인 */
-        .tooltip::-webkit-scrollbar {
-            width: 6px;
-        }
-        .tooltip::-webkit-scrollbar-thumb {
-            background-color: #555;
-            border-radius: 3px;
-        }
 
-        /* 반응형: 모바일 화면 */
+        /* 스크롤바 커스텀 */
+        .tooltip::-webkit-scrollbar { width: 6px; }
+        .tooltip::-webkit-scrollbar-thumb { background-color: #555; border-radius: 3px; }
+
         @media (max-width: 600px) {
-            .bingo-board {
-                gap: 10px;
-            }
-            .game-title {
-                font-size: 0.9rem;
-            }
-            .tooltip {
-                width: 180px; /* 모바일에서는 조금 더 작게 */
-            }
+            .tooltip { width: 160px; }
+            .count-badge { font-size: 0.8rem; padding: 3px 8px; }
         }
     </style>
 </head>
@@ -215,10 +199,11 @@
         <input type="text" id="searchInput" placeholder="이름을 입력해서 확인하세요 (예: 홍길동)">
     </div>
 
+    <!-- 빙고판 영역 -->
     <div class="bingo-board" id="bingoBoard">
-        <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">
-            데이터를 불러오는 중입니다...<br>
-            잠시만 기다려주세요.
+        <div style="grid-column: 1/-1; text-align: center; padding: 100px 20px; color: #666; background: rgba(255,255,255,0.8);">
+            데이터 불러오는 중...<br>
+            (배경 이미지가 안 보이면 board.png 파일을 확인해주세요)
         </div>
     </div>
 
@@ -229,73 +214,51 @@
         const SHEET_ID = '15X8Ypy6V0K1OzM4zFYkX_p62xWHG20qJG_YRUWB17Mk';
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
-        // 화면에 보여줄 게임 순서 (빙고판 1~9번)
-        // 주의: 구글 시트의 첫 번째 줄(헤더)에 이 단어들이 포함되어 있어야 매칭됩니다.
+        // 구글 시트 헤더 및 게임 순서
         const TARGET_GAMES = [
             "챌린저스", "스컬킹", "라스베가스",
             "위너스써클", "소울메이트", "미지의행성",
             "젝스님트", "히트", "텔레스트레이션"
         ];
 
-        // 데이터 저장소
         let gameData = {};
 
-        /**
-         * 1. CSV 데이터 가져오기 및 파싱
-         */
+        // 1. 데이터 가져오기
         async function fetchBingoData() {
             try {
                 const response = await fetch(CSV_URL);
                 if (!response.ok) throw new Error("네트워크 응답 실패");
-                
                 const csvText = await response.text();
                 parseCSV(csvText);
             } catch (error) {
-                console.error("데이터 로드 오류:", error);
+                console.error("오류:", error);
                 document.getElementById('bingoBoard').innerHTML = 
-                    `<div style="color:red; text-align:center; grid-column:1/-1;">
-                        데이터를 불러오지 못했습니다.<br>
-                        구글 시트가 '웹에 게시' 되었는지 확인해주세요.
+                    `<div style="color:red; text-align:center; padding:50px;">
+                        데이터 로드 실패.<br>시트 설정을 확인해주세요.
                     </div>`;
             }
         }
 
-        /**
-         * 2. CSV 텍스트를 객체로 변환
-         */
+        // 2. 데이터 파싱
         function parseCSV(text) {
-            // 줄바꿈으로 행 분리
             const rows = text.split('\n').map(row => row.split(','));
-            
-            // 헤더(1행)에서 게임 이름들의 인덱스 찾기
             const headers = rows[0].map(h => h.trim());
             
-            // 데이터 초기화
-            TARGET_GAMES.forEach(game => {
-                gameData[game] = [];
-            });
+            TARGET_GAMES.forEach(game => gameData[game] = []);
 
-            // 매칭되는 컬럼 찾기
             const columnMapping = {};
             TARGET_GAMES.forEach(targetGame => {
-                // 헤더에 게임 이름이 포함되어 있는지 확인 (부분 일치 허용)
                 const index = headers.findIndex(h => h.includes(targetGame));
-                if (index !== -1) {
-                    columnMapping[targetGame] = index;
-                }
+                if (index !== -1) columnMapping[targetGame] = index;
             });
 
-            // 2행부터 데이터 순회하며 이름 수집
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                // 각 게임별로 성공자 이름 확인
                 Object.keys(columnMapping).forEach(gameName => {
                     const colIndex = columnMapping[gameName];
                     if (row[colIndex]) {
                         const name = row[colIndex].trim();
-                        if (name) {
-                            gameData[gameName].push(name);
-                        }
+                        if (name) gameData[gameName].push(name);
                     }
                 });
             }
@@ -303,29 +266,28 @@
             renderBoard();
         }
 
-        /**
-         * 3. 빙고판 그리기 (DOM 생성)
-         */
+        // 3. 빙고판 그리기 (투명 버튼 생성)
         function renderBoard() {
             const board = document.getElementById('bingoBoard');
-            board.innerHTML = ''; // 로딩 메시지 제거
+            board.innerHTML = ''; 
 
             TARGET_GAMES.forEach(gameName => {
                 const winners = gameData[gameName] || [];
                 
-                // 카드 요소 생성
                 const cell = document.createElement('div');
                 cell.className = 'bingo-cell';
                 cell.dataset.game = gameName;
 
-                // 내용물 구성
                 cell.innerHTML = `
-                    <div class="game-title">${gameName}</div>
-                    <div class="count-badge">${winners.length}명 성공</div>
+                    <div class="game-title">${gameName}</div> <!-- CSS로 숨김 처리됨 -->
                     
-                    <!-- 툴팁 (마우스 오버 시 표시) -->
+                    <!-- 인원수 배지 (이미지 위에 뜸) -->
+                    <div class="count-badge">
+                        ${winners.length > 0 ? `✅ ${winners.length}명` : '0명'}
+                    </div>
+                    
                     <div class="tooltip">
-                        <h4>🏆 성공 명단</h4>
+                        <h4>${gameName} 성공자</h4>
                         <ul>
                             ${winners.length > 0 
                                 ? winners.map(name => `<li>${name}</li>`).join('') 
@@ -333,16 +295,12 @@
                         </ul>
                     </div>
                 `;
-
                 board.appendChild(cell);
             });
         }
 
-        /**
-         * 4. 검색 기능 (이름 하이라이트)
-         */
+        // 4. 검색 기능
         const searchInput = document.getElementById('searchInput');
-
         searchInput.addEventListener('keyup', function() {
             const query = this.value.trim();
             const cells = document.querySelectorAll('.bingo-cell');
@@ -351,7 +309,6 @@
                 const gameName = cell.dataset.game;
                 const winners = gameData[gameName] || [];
 
-                // 검색어가 빈칸이 아니고, 명단에 포함되어 있다면
                 if (query && winners.some(w => w.includes(query))) {
                     cell.classList.add('matched');
                 } else {
@@ -360,9 +317,7 @@
             });
         });
 
-        // 앱 시작
         fetchBingoData();
-
     </script>
 </body>
 </html>
