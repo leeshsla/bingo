@@ -389,7 +389,7 @@
             const statsContainer = document.getElementById('statsContainer');
             statsContainer.innerHTML = `
                 <div class="stat-card rank-1">
-                    <div class="stat-title">🌱 1줄 빙고 (${result.oneBingo.length}명)</div>
+                    <div class="stat-title">🌱 1줄 빙고 (1,000원) (${result.oneBingo.length}명)</div>
                     <ul class="stat-list">
                         ${result.oneBingo.length > 0 
                             ? result.oneBingo.map(n => `<li>${n}</li>`).join('') 
@@ -398,7 +398,7 @@
                 </div>
                 
                 <div class="stat-card rank-3">
-                    <div class="stat-title">🌿 3줄 빙고 (${result.threeBingo.length}명)</div>
+                    <div class="stat-title">🌿 3줄 빙고 (2,500원) (${result.threeBingo.length}명)</div>
                     <ul class="stat-list">
                         ${result.threeBingo.length > 0 
                             ? result.threeBingo.map(n => `<li>${n}</li>`).join('') 
@@ -407,7 +407,7 @@
                 </div>
 
                 <div class="stat-card rank-all">
-                    <div class="stat-title">👑 올빙고 (${result.allBingo.length}명)</div>
+                    <div class="stat-title">👑 올빙고 (5,000원) (${result.allBingo.length}명)</div>
                     <ul class="stat-list">
                         ${result.allBingo.length > 0 
                             ? result.allBingo.map(n => `<li>${n}</li>`).join('') 
@@ -451,3 +451,4 @@
     </script>
 </body>
 </html>
+
